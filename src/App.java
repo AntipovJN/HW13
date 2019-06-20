@@ -1,6 +1,9 @@
 import java.io.*;
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class App {
@@ -20,25 +23,23 @@ public class App {
         for(Animal animal : deserializeAnimalArray(bai.toByteArray())){
             System.out.println(animal.toString());
         }
+        System.out.println("cat".hashCode() + " " + "dogs hash less".hashCode() +" " + "Y?".hashCode()+ " " + "It's impossible".hashCode());
+        Comparator comparator = ( a,  b) -> ((a.equals(b) ? 0: (a.hashCode() <  b.hashCode()) ? -1 : 1));
+        Stream stream = Stream.of("cat","dog has biggest hash","Y?","It's impossible");
+        BiConsumer minMaxConsumer = (s1, s2) -> System.out.println( s1 + " " + s2);
+        findMinMax(stream, comparator, minMaxConsumer);
     }
 
     public static <T> void findMinMax(
             Stream<? extends T> stream,
             Comparator<? super T> order,
             BiConsumer<? super T, ? super T> minMaxConsumer) {
-        @SuppressWarnings("unchecked")
-        T[] array = (T[]) new Object[2];
-        stream.forEach(x -> {
-            if (x != null && (array[0] == null)) {
-                array[0] = array[1] = x;
-            }
-            if (order.compare(x, array[0]) < 0) {
-                array[0] = x;
-            } else if (order.compare(x, array[1]) > 0) {
-                array[1] = x;
-            }
-        });
-        minMaxConsumer.accept(array[0], array[1]);
+        if (!stream.equals(Stream.empty())) {
+            List<T> list = stream.sorted(order).collect(Collectors.toList());
+            minMaxConsumer.accept(list.get(0), list.get(list.size() - 1));
+        } else {
+            minMaxConsumer.accept(null, null);
+        }
     }
 
     public static Animal[] deserializeAnimalArray(byte[] data) {
